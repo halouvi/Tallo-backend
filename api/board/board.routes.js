@@ -1,8 +1,6 @@
 const express = require('express')
 const {
   getBoard,
-  checkBoards,
-  performBoard,
   addBoard,
   getBoards,
   deleteBoard,
@@ -14,8 +12,6 @@ const router = express.Router()
 // router.use(requireAuth)
 
 router.get('/', getBoards)
-router.get('/start', checkBoards)
-router.get('/:_id/start', performBoard)
 router.get('/:_id', getBoard)
 router.post('/', addBoard)
 router.put('/:_id', updateBoard)

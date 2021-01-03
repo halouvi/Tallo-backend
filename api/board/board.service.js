@@ -1,6 +1,5 @@
 const dbService = require('../../services/db.service')
 const ObjectId = require('mongodb').ObjectId
-const externalService = require('../../services/external.service')
 const { emit } = require('../socket/socket.routes')
 
 module.exports = {
@@ -9,43 +8,6 @@ module.exports = {
   remove,
   update,
   add,
-  checkBoards,
-  performBoard,
-}
-
-// checkBoards()
-var interval
-function checkBoards() {
-  clearInterval(interval)
-  interval = setInterval(async () => {
-    try {
-      let res = await query({})
-      let boards = res.boards.filter(board => !board.doneAt)
-      boards.sort((a, b) => {
-        return a.importance - b.importance
-          ? a.importance - b.importance
-          : a.triesCount - b.triesCount
-      })
-      const board = await performBoard(boards[0]._id)
-      await update(board)
-    } catch (error) {
-      console.log(error)
-    }
-  }, 2000)
-}
-
-async function performBoard(boardId) {
-  try {
-    var board = await getById(boardId)
-    await externalService.execute(board)
-    board.doneAt = Date.now()
-  } catch (error) {
-    throw error
-  } finally {
-    board.lastTriedAt = Date.now()
-    board.triesCount++
-    return board
-  }
 }
 
 async function query(query) {
