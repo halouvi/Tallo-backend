@@ -45,10 +45,11 @@ async function getById(boardId) {
 }
 
 async function update(board) {
+  board._id = ObjectId(board._id)
   try {
     const collection = await dbService.getCollection('board')
-    await collection.findOneAndUpdate({ _id: ObjectId(board._id) }, { $set: board })
-    emit('updateBoard', board)
+    await collection.findOneAndUpdate({ _id: board._id }, { $set: board })
+    // emit('updateBoard', board)
     return board
   } catch (err) {
     console.log(`ERROR: cannot update board ${ObjectId(board._id)}`)
@@ -89,9 +90,7 @@ function _boardsSorter(boards, { sortBy = 'rating' }) {
 }
 
 function _boardsPager(boards, { page = 1, limit = 100 }) {
-  return boards.filter(
-    (board, idx) => idx >= page * limit - limit && idx <= page * limit - 1
-  )
+  return boards.filter((board, idx) => idx >= page * limit - limit && idx <= page * limit - 1)
 }
 
 function _ratingAverage(board) {
