@@ -84,7 +84,7 @@ async function resetUnreadBookings(user) {
 
 async function add(user) {
   const collection = await dbService.getCollection('user')
-  user.unreadBookings = 0;
+  // user.unreadBookings = 0;
   try {
     await collection.insertOne(user)
     return user
