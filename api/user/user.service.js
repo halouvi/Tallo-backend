@@ -2,11 +2,28 @@ const dbService = require('../../services/db.service')
 const ObjectId = require('mongodb').ObjectId
 
 module.exports = {
+  getUsersById,
   getById,
   getByEmail,
   remove,
   update,
   add,
+}
+
+async function getUsersById(users) {
+  const collection = await dbService.getCollection('user')
+  try {
+    const resUsers = await collection
+      .find({
+        _id: { $in: users.map(user => ObjectId(user._id)) },
+      })
+      .toArray()
+    resUsers.forEach(user => delete user.password)
+    return resUsers
+  } catch (err) {
+    console.log(`ERROR: while finding users`)
+    throw err
+  }
 }
 
 async function getById(userId) {

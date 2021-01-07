@@ -1,4 +1,5 @@
 const boardService = require('./board.service')
+const userService = require('../user/user.service')
 const logger = require('../../services/logger.service')
 
 module.exports = {
@@ -17,7 +18,8 @@ async function getBoards(req, res) {
 
 async function getBoard(req, res) {
   const board = await boardService.getById(req.params._id)
-  res.send(board)
+  const users = await userService.getUsersById(board.users)
+  res.send({board, users})
 }
 
 async function deleteBoard(req, res) {
