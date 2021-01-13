@@ -1,46 +1,44 @@
 const chatMap = {}
 const { io } = require('../../server')
+const { boardService } = require('../board/board.service')
 
-function emit(type, payload) {
+const emit = (type, payload) => {
   io.sockets.emit(type, payload)
 }
 
-function connectSockets(io) {
-  io.on('connection', socket => {
-    // io.sockets.emit('update', )
-    // socket.on('onChatMsg', msg => {
-    //   if (!chatMap[socket.boardId]) chatMap[socket.boardId] = []
-    //   chatMap[socket.boardId].push(msg)
-    //   io.to(socket.boardId).emit('chatMsg', msg)
-    // })
-    // socket.on('onUserLogin', userId => {
-    //   socket.join(userId)
-    //   socket.userId = userId
-    // })
+const connection = 'connection'
+const disconnect = 'disconnect'
+const JOIN_BOARD = 'JOIN_BOARD'
+const BOARD_UPDATED = 'BOARD_UPDATED'
+const LEAVE_BOARD = 'LEAVE_BOARD'
 
-    // socket.on('onJoinBoardChat', boardId => {
-    //   socket.leave(socket.boardId)
-    //   socket.join(boardId)
-    //   socket.boardId = boardId
-    //   if (chatMap[boardId])
-    //   io.to(boardId).emit('chatLoadHistory', chatMap[boardId])
-    // })
+const connectSockets = io => {
+  io.on(connection, socket => {
+    socket.on(JOIN_BOARD, boardId => {
+      socket.leave(socket.boardId)
+      socket.join(boardId)
+      socket.boardId = boardId
+    })
+    socket.on(BOARD_UPDATED, async (boardId) => {
+      const board = await boardService.getById(boardId)
+      socket.broadcast.emit(BOARD_UPDATED, board)
+    })
 
-    // socket.on('onLeaveBoardChat', () => {
-    //   socket.leave(socket.boardId)
-    //   delete socket.boardId
-    // })
+    socket.on(LEAVE_BOARD, () => {
+      socket.leave(socket.boardId)
+      delete socket.boardId
+    })
 
-    socket.on('disconnect', () => {})
+    socket.on(disconnect, () => {})
   })
 }
 
-function _formatDate(date) {
-  return new Date(date).toLocaleDateString('en-us', {
-    timeZone: 'utc',
-    month: 'short',
-    day: 'numeric',
-  })
-}
+// function _formatDate(date) {
+//   return new Date(date).toLocaleDateString('en-us', {
+//     timeZone: 'utc',
+//     month: 'short',
+//     day: 'numeric',
+//   })
+// }
 
-module.exports = { connectSockets, emit }
+module.exports = { connectSockets, emit, BOARD_UPDATED }
