@@ -34,10 +34,10 @@ async function updateBoard(req, res) {
 }
 
 async function addBoard(req, res) {
-  const board = req.body
-  // console.log(board);
-  const boardId = await boardService.add(board);
-  res.send(boardId)
+  const newBoard = req.body
+  const board = await boardService.add(newBoard);
+  const users = await userService.getUsersById(board.users)
+  res.send({board, users})
 }
 
 
