@@ -1,46 +1,39 @@
-const userService = require('./user.service')
+const { userService } = require('./user.service')
 const logger = require('../../services/logger.service')
 
-async function getUser(req, res) {
-  const user = await userService.getById(req.params.id)
-  res.send(user)
-}
-
-async function getUsers(req, res) {
-  console.log('sss', req.params)
-  const users = await userService.getUsersById(req.body)
-  logger.debug(users)
-  res.send(users)
-}
-
-async function deleteUser(req, res) {
-  await userService.remove(req.params.id)
-  res.end()
-}
-
-async function updateUser(req, res) {
-  const user = req.body
-  await userService.update(user)
-  res.send(user)
-}
-
-async function unreadBooking(req, res) {
-  const user = req.body
-  const updatedUser = await userService.unreadBooking(user)
-  res.send(updatedUser)
-}
-
-async function resetUnreadBookings(req, res) {
-  const user = req.body
-  const updatedUser = await userService.resetUnreadBookings(user)
-  res.send(updatedUser)
-}
-
 module.exports = {
-  getUser,
-  getUsers,
-  deleteUser,
-  updateUser,
-  unreadBooking,
-  resetUnreadBookings,
+  getUser: async (req, res) => {
+    const user = await userService.getById(req.params.id)
+    res.send(user)
+  },
+
+  getUsers: async (req, res) => {
+    console.log('sss', req.params)
+    const users = await userService.getUsersById(req.body)
+    logger.debug(users)
+    res.send(users)
+  },
+
+  deleteUser: async (req, res) => {
+    await userService.remove(req.params.id)
+    res.end()
+  },
+
+  updateUser: async (req, res) => {
+    const user = req.body
+    await userService.update(user)
+    res.send(user)
+  },
+
+  unreadBooking: async (req, res) => {
+    const user = req.body
+    const updatedUser = await userService.unreadBooking(user)
+    res.send(updatedUser)
+  },
+
+  resetUnreadBookings: async (req, res) => {
+    const user = req.body
+    const updatedUser = await userService.resetUnreadBookings(user)
+    res.send(updatedUser)
+  }
 }

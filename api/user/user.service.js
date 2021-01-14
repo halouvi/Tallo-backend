@@ -2,80 +2,75 @@ const dbService = require('../../services/db.service')
 const { ObjectId } = require('mongodb')
 
 module.exports = {
-  getUsersById,
-  getById,
-  getByEmail,
-  remove,
-  update,
-  add
-}
+  userService: {
+    getUsersById: async users => {
+      try {
+        const collection = await dbService.getCollection('user')
+        return await collection
+          .aggregate([
+            { $match: { _id: { $in: users.map(user => ObjectId(user._id)) } } },
+            { $unset: 'password' }
+          ])
+          .toArray()
+      } catch (err) {
+        console.log(`ERROR: while finding users: ${error}`)
+        throw err
+      }
+    },
 
-async function getUsersById(users) {
-  try {
-    const collection = await dbService.getCollection('user')
-    return await collection
-      .aggregate([
-        { $match: { _id: { $in: users.map(user => ObjectId(user._id)) } } },
-        { $unset: 'password' }
-      ])
-      .toArray()
-  } catch (err) {
-    console.log(`ERROR: while finding users: ${error}`)
-    throw err
-  }
-}
+    getById: async userId => {
+      const collection = await dbService.getCollection('user')
+      try {
+        const user = await collection.findOne({ _id: ObjectId(userId) })
+        delete user.password
+        return user
+      } catch (err) {
+        console.log(`ERROR: while finding user ${userId}`)
+        throw err
+      }
+    },
+    getByEmail: async email => {
+      const collection = await dbService.getCollection('user')
+      try {
+        const user = await collection.findOne({ email })
+        return user
+      } catch (err) {
+        console.log(`ERROR: while finding user ${email}`)
+        throw err
+      }
+    },
 
-async function getById(userId) {
-  const collection = await dbService.getCollection('user')
-  try {
-    const user = await collection.findOne({ _id: ObjectId(userId) })
-    delete user.password
-    return user
-  } catch (err) {
-    console.log(`ERROR: while finding user ${userId}`)
-    throw err
-  }
-}
-async function getByEmail(email) {
-  const collection = await dbService.getCollection('user')
-  try {
-    const user = await collection.findOne({ email })
-    return user
-  } catch (err) {
-    console.log(`ERROR: while finding user ${email}`)
-    throw err
-  }
-}
+    remove: async userId => {
+      const collection = await dbService.getCollection('user')
+      try {
+        await collection.deleteOne({ _id: ObjectId(userId) })
+      } catch (err) {
+        console.log(`ERROR: cannot remove user ${userId}`)
+        throw err
+      }
+    },
 
-async function remove(userId) {
-  const collection = await dbService.getCollection('user')
-  try {
-    await collection.deleteOne({ _id: ObjectId(userId) })
-  } catch (err) {
-    console.log(`ERROR: cannot remove user ${userId}`)
-    throw err
-  }
-}
+    update: async user => {
+      const collection = await dbService.getCollection('user')
+      user._id = ObjectId(user._id)
+      try {
+        await collection.replaceOne({ _id: user._id }, { $set: user })
+        return user
+      } catch (err) {
+        console.log(`ERROR: cannot update user ${user._id}`)
+        throw err
+      }
+    },
 
-async function update(user) {
-  const collection = await dbService.getCollection('user')
-  user._id = ObjectId(user._id)
-  try {
-    await collection.replaceOne({ _id: user._id }, { $set: user })
-    return user
-  } catch (err) {
-    console.log(`ERROR: cannot update user ${user._id}`)
-    throw err
-  }
-}
-
-async function add(user) {
-  const collection = await dbService.getCollection('user')
-  try {
-    await collection.insertOne(user)
-    return user
-  } catch (err) {
-    console.log(`ERROR: cannot insert user`)
-    throw err
+    add: async user => {
+      const collection = await dbService.getCollection('user')
+      try {
+        await collection.insertOne(user)
+        return user
+      } catch (err) {
+        console.log(`ERROR: cannot insert user`)
+        throw err
+      }
+    }
   }
 }
