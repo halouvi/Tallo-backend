@@ -8,8 +8,7 @@ module.exports = {
   },
 
   getUsers: async (req, res) => {
-    console.log('sss', req.params)
-    const users = await userService.getUsersById(req.body)
+    const users = await userService.query(req.params)
     logger.debug(users)
     res.send(users)
   },

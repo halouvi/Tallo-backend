@@ -19,13 +19,13 @@ module.exports = {
       return user
     },
 
-    signup: async ({ email, password, name, imgUrl }) => {
-      logger.debug(`auth.service - signup with email: ${email}, name: ${name}`)
-      if (!email || !password || !name)
-        return Promise.reject('email, name and password are required!')
+    signup: async ({ email, password, fullname, imgUrl, boards }) => {
+      logger.debug(`auth.service - signup with email: ${email}, name: ${fullname}`)
+      if (!email || !password || !fullname)
+        return Promise.reject('email, fullname and password are required!')
 
       const hash = await bcrypt.hash(password, saltRounds)
-      return userService.add({ email, password: hash, name, imgUrl })
+      return userService.add({ email, password: hash, fullname, imgUrl, boards })
     }
   }
 }
