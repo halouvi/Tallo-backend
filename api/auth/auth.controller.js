@@ -1,11 +1,13 @@
 const authService = require('./auth.service')
-const logger = require('../../services/logger.service')
+const logger = require('../../services/logger.service');
+const {boardService} = require('../board/board.service');
 
 async function login(req, res) {
     try {
         const user = await authService.login(req.body)
-        req.session.user = user;
-        res.json(user)
+        req.session.user = user
+        const userBoards = await boardService.getBoardsById(user.boards)
+        res.send({user, userBoards})
     } catch (err) {
         res.status(401).send({ error: err })
     }

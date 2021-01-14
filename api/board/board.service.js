@@ -54,6 +54,20 @@ module.exports = {
         console.log(`ERROR: cannot insert board`)
         throw new Error(error)
       }
+    },
+    getBoardsById: async boards => {
+      try {
+        const collection = await dbService.getCollection('board')
+        return await collection
+          .aggregate([
+            { $match: { _id: { $in: boards.map(board => ObjectId(board)) } } },
+            { $unset: 'lists' }
+          ])
+          .toArray()
+      } catch (err) {
+        console.log(`ERROR: while finding boards: ${error}`)
+        throw err
+      }
     }
   }
 }
