@@ -7,7 +7,21 @@ module.exports = {
   getByEmail,
   remove,
   update,
-  add
+  add,
+  query
+}
+
+async function query(query) {
+  try {
+    const criteria = _buildCriteria(query)
+    const collection = await dbService.getCollection('user')
+    const users = await collection.find(criteria).toArray()
+    users.forEach(user => delete user.password)
+    return users 
+  } catch (error) {
+    console.log('ERROR: cannot find users')
+    throw new Error(error)
+  }
 }
 
 async function getUsersById(users) {
@@ -78,4 +92,14 @@ async function add(user) {
     console.log(`ERROR: cannot insert user`)
     throw err
   }
+}
+
+function _buildCriteria(query) {
+  const criteria = {}
+  if (query.q) {
+    if (!criteria.$or) criteria.$or = []
+    const regex = new RegExp(query.q.split(/,|-| /).join('|'), 'i')
+    criteria.$or.push({ 'fullname': regex })
+  }
+  return criteria
 }
