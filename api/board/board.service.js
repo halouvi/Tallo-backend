@@ -17,8 +17,8 @@ module.exports = {
       }
     },
     remove: async boardId => {
-      const collection = await dbService.getCollection('board')
       try {
+        const collection = await dbService.getCollection('board')
         return await collection.deleteOne({ _id: ObjectId(boardId) })
       } catch (error) {
         console.log(`ERROR: cannot remove board ${boardId}`)
