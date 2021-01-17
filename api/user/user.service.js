@@ -3,6 +3,20 @@ const { ObjectId } = require('mongodb')
 
 module.exports = {
   userService: {
+
+    query: async (query) => {
+      try {
+        const criteria = _buildCriteria(query)
+        const collection = await dbService.getCollection('user')
+        const users = await collection.find(criteria).toArray()
+        users.forEach(user => delete user.password)
+        return users 
+      } catch (error) {
+        console.log('ERROR: cannot find users')
+        throw new Error(error)
+      }
+    },
+
     getUsersById: async users => {
       try {
         const collection = await dbService.getCollection('user')
@@ -12,8 +26,8 @@ module.exports = {
             { $unset: 'password' }
           ])
           .toArray()
+        } catch (err) {
         console.log(`ERROR: while finding users: ${error}`)
-      } catch (err) {
         throw new Error(err)
       }
     },
@@ -76,4 +90,14 @@ module.exports = {
       }
     }
   }
+}
+
+function _buildCriteria(query) {
+  const criteria = {}
+  if (query.q) {
+    if (!criteria.$or) criteria.$or = []
+    const regex = new RegExp(query.q.split(/,|-| /).join('|'), 'i')
+    criteria.$or.push({ 'fullname': regex })
+  }
+  return criteria
 }

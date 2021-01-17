@@ -1,5 +1,5 @@
 const { boardService } = require('./board.service')
-const userService = require('../user/user.service')
+const {userService} = require('../user/user.service')
 const logger = require('../../services/logger.service')
 
 module.exports = {

@@ -1,4 +1,4 @@
-const authService = require('./auth.service')
+const {authService} = require('./auth.service')
 const logger = require('../../services/logger.service')
 const { boardService } = require('../board/board.service')
 
