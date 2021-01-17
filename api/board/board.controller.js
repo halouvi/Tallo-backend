@@ -36,6 +36,10 @@ async function updateBoard(req, res) {
 async function addBoard(req, res) {
   const newBoard = req.body
   const board = await boardService.add(newBoard);
-  const users = await userService.getUsersById(board.users)
-  res.send({board, users})
+  let user = JSON.parse(JSON.stringify(req.session.user));
+  user.boards.push(board._id);
+  await userService.update(user);
+  const userBoards = await boardService.getBoardsById(user.boards);
+  const users = await userService.getUsersById(board.users);
+  res.send({board, users, userBoards})
 }
