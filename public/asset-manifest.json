@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.css": "/static/css/main.3d3b978a.chunk.css",
+    "main.css": "/static/css/main.6710193b.chunk.css",
     "main.js": "/static/js/main.7287dc36.chunk.js",
     "main.js.map": "/static/js/main.7287dc36.chunk.js.map",
     "runtime-main.js": "/static/js/runtime-main.3d7cf4bb.js",
@@ -8,7 +8,7 @@
     "static/js/2.def8fbf1.chunk.js": "/static/js/2.def8fbf1.chunk.js",
     "static/js/2.def8fbf1.chunk.js.map": "/static/js/2.def8fbf1.chunk.js.map",
     "index.html": "/index.html",
-    "static/css/main.3d3b978a.chunk.css.map": "/static/css/main.3d3b978a.chunk.css.map",
+    "static/css/main.6710193b.chunk.css.map": "/static/css/main.6710193b.chunk.css.map",
     "static/js/2.def8fbf1.chunk.js.LICENSE.txt": "/static/js/2.def8fbf1.chunk.js.LICENSE.txt",
     "static/media/avatar-aiysha.e119a0c1.jpg": "/static/media/avatar-aiysha.e119a0c1.jpg",
     "static/media/avatar-kady.78fc482c.jpg": "/static/media/avatar-kady.78fc482c.jpg",
@@ -27,7 +27,7 @@
   "entrypoints": [
     "static/js/runtime-main.3d7cf4bb.js",
     "static/js/2.def8fbf1.chunk.js",
-    "static/css/main.3d3b978a.chunk.css",
+    "static/css/main.6710193b.chunk.css",
     "static/js/main.7287dc36.chunk.js"
   ]
 }
