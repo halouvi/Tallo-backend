@@ -1,55 +1,72 @@
 const { authService } = require('./auth.service')
 const logger = require('../../services/logger.service')
 const { boardService } = require('../board/board.service')
+const { userService } = require('../user/user.service')
+
+const NAME = 'token'
+const MAX_AGE = 259200000 // 3 days
 
 module.exports = {
-  login: async (req, res) => {
+  login: async ({ decodedToken, body }, res) => {
     try {
-      const { user, login } =
-        req.body.email || req.body.password
-          ? await authService.login(req.body)
-          : req.cookies.login
-          ? await authService.tokenLogin(req.cookies.login)
-          : {}
-      if (!user || !login) throw new Error('ERROR: No credentials sent')
-      req.session.user = user
-      res.cookie('login', login, {
-        maxAge: 259200000, // 3 days
-        httpOnly: true
-      })
-      const userBoards = await boardService.getBoardsById(user.boards)
-      res.send({ user, userBoards })
-    } catch (error) {
-      res.status(401).send({ error })
+      var user
+      if (decodedToken) {
+        user = await userService.getById(decodedToken.userId)
+      } else {
+        user = await userService.getByEmail(body.email)
+        const match = await authService.validatePassword(body.password, user.password)
+        delete user.password
+        if (!match) throw new Error(`Couldn't login: Invalid email or password`)
+      }
+      const token = await authService.login(user._id)
+      const boards = await boardService.getBoardsById(user.boards)
+      const board = boards[0]
+      user.boards = boards.map(({ _id, title }) => ({ _id, title }))
+      res
+        .cookie(NAME, token, {
+          maxAge: MAX_AGE,
+          httpOnly: true
+        })
+        .send({ user, board })
+      logger.debug(`${user.email} Logged in}`)
+    } catch ({ message }) {
+      console.error(message)
+      logger.error('[LOGIN] ' + message)
+      res.status(401).send({ message })
     }
   },
 
   signup: async (req, res) => {
     try {
-      const { email, password, fullname, imgUrl, boards } = req.body
-      logger.debug(email + ', ' + fullname + ', ' + password + ',' + imgUrl + ',' + boards)
-      const account = await authService.signup(req.body)
-      logger.debug(`auth.route - new account created: ` + JSON.stringify(account))
-      const user = await authService.login(req.body)
-      req.session.user = user
-      res.json(user)
-    } catch (err) {
-      logger.error('[SIGNUP] ' + err)
-      res.status(500).send({ error: 'could not signup, please try later' })
+      const user = await authService.signup(req.body)
+      const token = await authService.login(user._id)
+      res
+        .cookie(NAME, token, {
+          maxAge: MAX_AGE,
+          httpOnly: true
+        })
+        .send({ user })
+      logger.debug(`new account created: ${JSON.stringify(req.body.email)}`)
+    } catch ({ message }) {
+      console.error(message)
+      logger.error('[SIGNUP] ' + message)
+      res.status(500).send({ message })
     }
   },
 
   logout: async (req, res) => {
     try {
-      req.session.destroy()
-      await authService.logout(req.cookies.login)
-      res.cookie('login', null, {
-        maxAge: 0,
-        httpOnly: true
-      })
-      res.send({ message: 'logged out successfully' })
-    } catch (error) {
-      res.status(500).send({ error })
+      // await authService.logout(req.decodedToken)
+      res
+        .cookie(NAME, null, {
+          maxAge: 0,
+          httpOnly: true
+        })
+        .send({ message: 'logged out successfully' })
+    } catch ({ message }) {
+      console.error({ message })
+      logger.error('[LOGOUT] ' + message)
+      res.status(500).send({ message: 'could not logout, please try later' })
     }
   }
 }

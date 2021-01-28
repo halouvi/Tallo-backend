@@ -30,7 +30,7 @@ module.exports = {
         const collection = await dbService.getCollection('board')
         return await collection.findOne({ _id: ObjectId(boardId) })
       } catch (error) {
-        console.log(`ERROR: cannot remove board ${boardId}`)
+        console.log(`ERROR: cannot get board ${boardId}`)
         throw new Error(error)
       }
     },
@@ -48,22 +48,36 @@ module.exports = {
     add: async board => {
       try {
         const collection = await dbService.getCollection('board')
-        const addedBoard = await collection.insertOne(board)
-        return await collection.findOne({ _id: ObjectId(addedBoard.insertedId) })
+        const { insertedId } = await collection.insertOne(board)
+        return insertedId
       } catch (error) {
         console.log(`ERROR: cannot insert board`)
         throw new Error(error)
       }
     },
-    getBoardsById: async boards => {
+    getBoardsById: async boardIds => {
       try {
         const collection = await dbService.getCollection('board')
-        return await collection
-          .aggregate([
-            { $match: { _id: { $in: boards.map(board => ObjectId(board)) } } },
-            { $unset: 'lists' }
-          ])
+        const boards = await collection
+          .find(
+            { _id: { $in: boardIds.map(board => ObjectId(board)) } },
+            {
+              projection: {
+                title: true,
+                lists: {
+                  $cond: [{ $eq: ['$_id', ObjectId(boardIds[0])] }, '$lists', '$false']
+                },
+                users: {
+                  $cond: [{ $eq: ['$_id', ObjectId(boardIds[0])] }, '$users', '$false']
+                },
+                labels: {
+                  $cond: [{ $eq: ['$_id', ObjectId(boardIds[0])] }, '$labels', '$false']
+                }
+              }
+            }
+          )
           .toArray()
+        return boards
       } catch (err) {
         console.log(`ERROR: while finding boards: ${error}`)
         throw err

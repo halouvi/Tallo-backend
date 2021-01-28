@@ -1,78 +1,39 @@
-const bcrypt = require('bcrypt')
+require('dotenv').config()
 const { userService } = require('../user/user.service')
-const dbService = require('../../services/db.service')
-const { makeId } = require('../../services/util.service')
-const logger = require('../../services/logger.service')
-const { ObjectId } = require('mongodb')
+const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 
 const saltRounds = 10
 
-var tokens = []
-
 module.exports = {
   authService: {
-    login: async ({ email, password }) => {
-      logger.debug(`auth.service - login with email: ${email}`)
-      if (!email || !password) throw new Error('email and password are required!')
-      const user = await userService.getByEmail(email)
-      if (!user) return Promise.reject('Invalid email or password')
-      const match = await bcrypt.compare(password, user.password)
-      delete user.password
-      if (!match) return Promise.reject('Invalid email or password')
-
-      const collection = await dbService.getCollection('token')
-      const newToken = makeId(10)
-      const newHash = await bcrypt.hash(newToken, saltRounds)
-      const {
-        ops: [{ _id: newTokenId }]
-      } = await collection.insertOne({
-        hash: newHash,
-        createdAt: new Date(),
-        userId: ObjectId(user._id).toHexString()
-      })
-      const login = {
-        token: newToken,
-        tokenId: ObjectId(newTokenId).toHexString(),
-        userId: ObjectId(user._id).toHexString()
-      }
-      return { user, login }
-    },
-
-    tokenLogin: async ({ token, tokenId, userId }) => {
+    login: async userId => {
       try {
-        const collection = await dbService.getCollection('token')
-        const { value } = await collection.findOneAndUpdate(
-          { _id: ObjectId(tokenId) },
-          { $set: { createdAt: new Date() } }
-        )
-        console.log(value);
-        const match = await bcrypt.compare(token, value.hash)
-        if (!match) return Promise.reject('Invalid token')
-        const user = await userService.getById(userId)
-        return { user, login: { token, tokenId, userId } }
+        const token = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
+          expiresIn: '259200000', // 3 Days
+          algorithm: 'HS256'
+        })
+        return token
       } catch (error) {
-        console.error('ERROR: Could not check token', error)
-        throw new Error(error)
+        throw error
       }
     },
 
-    logout: async ({ tokenId }) => {
+    validatePassword: async (password, hashedPassword) => {
+      return await bcrypt.compare(password, hashedPassword)
+    },
+
+    signup: async body => {
       try {
-        const collection = await dbService.getCollection('token')
-        await collection.findOneAndDelete({ _id: ObjectId(tokenId) })
+        if (!body.email || !body.password || !body.fullname) {
+          throw new Error('email, fullname and password are required!')
+        }
+        const hash = await bcrypt.hash(password, saltRounds)
+        const user = await userService.add({ ...body, password: hash })
+        return user
       } catch (error) {
-        console.error('ERROR: Could not delete login token', error)
-        throw new Error(error)
+        throw error
       }
-    },
-
-    signup: async ({ email, password, fullname, imgUrl, boards }) => {
-      logger.debug(`auth.service - signup with email: ${email}, name: ${fullname}`)
-      if (!email || !password || !fullname)
-        return Promise.reject('email, fullname and password are required!')
-
-      const hash = await bcrypt.hash(password, saltRounds)
-      return userService.add({ email, password: hash, fullname, imgUrl, boards })
     }
   }
 }

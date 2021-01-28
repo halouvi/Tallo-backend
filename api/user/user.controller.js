@@ -19,20 +19,7 @@ module.exports = {
   },
 
   updateUser: async (req, res) => {
-    const user = req.body
-    await userService.update(user)
+    const user = await userService.update(req.body)
     res.send(user)
-  },
-
-  unreadBooking: async (req, res) => {
-    const user = req.body
-    const updatedUser = await userService.unreadBooking(user)
-    res.send(updatedUser)
-  },
-
-  resetUnreadBookings: async (req, res) => {
-    const user = req.body
-    const updatedUser = await userService.resetUnreadBookings(user)
-    res.send(updatedUser)
   }
 }

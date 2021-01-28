@@ -1,6 +1,7 @@
 const { boardService } = require('./board.service')
-const {userService} = require('../user/user.service')
+const { userService } = require('../user/user.service')
 const logger = require('../../services/logger.service')
+const { ObjectId } = require('mongodb')
 
 module.exports = {
   getBoards: async (req, res) => {
@@ -27,13 +28,14 @@ module.exports = {
   },
 
   addBoard: async (req, res) => {
-    const newBoard = req.body
-    const board = await boardService.add(newBoard);
-    let user = JSON.parse(JSON.stringify(req.session.user));
-    user.boards.push(board._id);
-    await userService.update(user);
-    const userBoards = await boardService.getBoardsById(user.boards);
-    const users = await userService.getUsersById(board.users);
-    res.send({ board, users, userBoards })
+    const board = req.body
+    const boardId = await boardService.add(board)
+    await userService.update({
+      userId: req.decodedToken.userId,
+      field: 'boards',
+      type: '$push',
+      value: boardId
+    })
+    res.send({ boardId })
   }
 }

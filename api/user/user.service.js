@@ -3,17 +3,16 @@ const { ObjectId } = require('mongodb')
 
 module.exports = {
   userService: {
-
-    query: async (query) => {
+    query: async query => {
       try {
         const criteria = _buildCriteria(query)
         const collection = await dbService.getCollection('user')
         const users = await collection.find(criteria).toArray()
         users.forEach(user => delete user.password)
-        return users 
-      } catch (error) {
-        console.log('ERROR: cannot find users')
-        throw new Error(error)
+        return users
+      } catch (err) {
+        console.error('cannot find users')
+        throw err
       }
     },
 
@@ -21,26 +20,28 @@ module.exports = {
       try {
         const collection = await dbService.getCollection('user')
         return await collection
-          .aggregate([
-            { $match: { _id: { $in: users.map(user => ObjectId(user._id)) } } },
-            { $unset: 'password' }
-          ])
+          .find(
+            { _id: { $in: users.map(user => ObjectId(user._id)) } },
+            { projection: { password: 0, boards: 0 } }
+          )
           .toArray()
-        } catch (err) {
+      } catch (err) {
         console.log(`ERROR: while finding users: ${error}`)
-        throw new Error(err)
+        throw err
       }
     },
 
     getById: async userId => {
       try {
         const collection = await dbService.getCollection('user')
-        const user = await collection.findOne({ _id: ObjectId(userId) })
-        delete user.password
+        const user = await collection.findOne(
+          { _id: ObjectId(userId) },
+          { projection: { password: false } }
+        )
         return user
       } catch (err) {
         console.log(`ERROR: while finding user ${userId}`)
-        throw new Error(err)
+        throw err
       }
     },
 
@@ -50,8 +51,8 @@ module.exports = {
         const user = await collection.findOne({ email })
         return user
       } catch (err) {
-        console.log(`ERROR: while finding user ${email}`)
-        throw new Error(err)
+        console.error(`ERROR: while finding user ${email}`)
+        throw err
       }
     },
 
@@ -65,13 +66,14 @@ module.exports = {
       }
     },
 
-    update: async (user) => {
-      const collection = await dbService.getCollection('user')
-      user._id = ObjectId(user._id)
-      console.log(user);
+    update: async ({ userId, field, type, value }) => {
       try {
-        // await collection.replaceOne({ _id: user._id }, { $set: user })
-        await collection.findOneAndUpdate({ _id: user._id }, { $set: user })
+        const collection = await dbService.getCollection('user')
+        const { value: user } = await collection.findOneAndUpdate(
+          { _id: ObjectId(userId) },
+          { [type]: { [field]: value } },
+          { new: true, projection: { password: false } }
+        )
         return user
       } catch (err) {
         console.log(`ERROR: cannot update user ${user._id}`)
@@ -82,7 +84,9 @@ module.exports = {
     add: async user => {
       try {
         const collection = await dbService.getCollection('user')
-        await collection.insertOne(user)
+        const { insertedId } = await collection.insertOne(user)
+        delete user.password
+        user._id = insertedId
         return user
       } catch (err) {
         console.log(`ERROR: cannot insert user`)
@@ -97,7 +101,7 @@ function _buildCriteria(query) {
   if (query.q) {
     if (!criteria.$or) criteria.$or = []
     const regex = new RegExp(query.q.split(/,|-| /).join('|'), 'i')
-    criteria.$or.push({ 'fullname': regex })
+    criteria.$or.push({ fullname: regex })
   }
   return criteria
 }

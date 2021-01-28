@@ -6,8 +6,8 @@ const router = express.Router()
 // middleware that is specific to this router
 // router.use(requireAuth)
 
-router.get('/users/:q', getUsers)
-router.get('/:id', getUser)
+router.get('/users/:q', requireAuth, getUsers)
+router.get('/:id', requireAuth, getUser)
 router.delete('/:id', requireAuth, requireAdmin, deleteUser)
 
 module.exports = router
