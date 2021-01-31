@@ -14,7 +14,7 @@ app.use(cookieParser())
 app.use(bodyParser.json({ limit: '50mb' }))
 app.use(bodyParser.urlencoded({ limit: '50mb', parameterLimit: 100000, extended: true }))
 app.use(queryType.middleware())
-
+ 
 process.env.NODE_ENV === 'production'
   ? app.use(express.static(path.resolve(__dirname, 'public')))
   : app.use(
