@@ -98,7 +98,7 @@ const _buildCriteria = params => {
   if (query) {
     if (!criteria.$or) criteria.$or = []
     const regex = new RegExp(query.split(/,|-| /).join('|'), 'i')
-    criteria.$or.push({ fullname: regex })
+    criteria.$or.push({ fullname: regex }, { email: regex })
   }
   return criteria
 }
