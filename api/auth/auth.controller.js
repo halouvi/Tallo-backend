@@ -59,7 +59,6 @@ const _login = async (user, res) => {
     const board = boards[0]
     user.boards = boards.map(({ _id, title }) => ({ _id, title }))
     board.users = await userService.getUsersById(board.users)
-    console.log(board.users)
     logger.debug(`${user.email} Logged in}`)
     res.cookie(..._createCookie(refreshToken)).send({ user, board, accessToken })
   } catch (err) {
