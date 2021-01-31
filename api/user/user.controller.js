@@ -7,7 +7,7 @@ module.exports = {
     res.send(user)
   },
 
-  getUsers: async (req, res) => {
+  query: async (req, res) => {
     const users = await userService.query(req.params)
     res.send(users)
   },

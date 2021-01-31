@@ -3,17 +3,6 @@ const { ObjectId } = require('mongodb')
 
 module.exports = {
   userService: {
-    query: async query => {
-      try {
-        const criteria = _buildCriteria(query)
-        const collection = await dbService.getCollection('user')
-        return await collection.find(criteria, { projection: { password: 0, boards: 0 } }).toArray()
-      } catch (err) {
-        console.error('cannot find users')
-        throw err
-      }
-    },
-
     getUsersById: async users => {
       try {
         const collection = await dbService.getCollection('user')
@@ -88,16 +77,47 @@ module.exports = {
         console.log(`ERROR: cannot insert user`)
         throw new Error(err)
       }
+    },
+
+    query: async params => {
+      try {
+        const criteria = _buildCriteria(params)
+        const collection = await dbService.getCollection('user')
+        return await collection.find(criteria, { projection: { password: 0, boards: 0 } }).toArray()
+      } catch (err) {
+        console.error('cannot find users')
+        // throw err
+      }
     }
   }
 }
 
-function _buildCriteria(query) {
+const _buildCriteria = params => {
+  const { query } = params
   const criteria = {}
-  if (query.q) {
+  if (query) {
     if (!criteria.$or) criteria.$or = []
-    const regex = new RegExp(query.q.split(/,|-| /).join('|'), 'i')
+    const regex = new RegExp(query.split(/,|-| /).join('|'), 'i')
     criteria.$or.push({ fullname: regex })
   }
   return criteria
 }
+
+// const _buildCriteria = body => {
+//   const { query, boardUsers } = body
+//   console.log(query)
+//   const criteria = { $and: [], $or: [] }
+//   if (query) {
+//     const regex = new RegExp(query.split(/,|-| /).join('|'), 'i')
+//     criteria.$or.push({ fullname: regex })
+//   }
+//   if (boardUsers.length) {
+//     const userIds = boardUsers.map(userId => ObjectId(userId))
+//     criteria.$and.push({
+//       _id: {
+//         $nin: userIds
+//       }
+//     })
+//   }
+//   return criteria
+// }
