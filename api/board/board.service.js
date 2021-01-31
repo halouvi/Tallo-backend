@@ -36,6 +36,7 @@ module.exports = {
     },
     update: async board => {
       board._id = ObjectId(board._id)
+      board.users = board.users.map(({ _id }) => _id)
       try {
         const collection = await dbService.getCollection('board')
         await collection.findOneAndUpdate({ _id: board._id }, { $set: board })

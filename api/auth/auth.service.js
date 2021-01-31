@@ -7,16 +7,16 @@ const saltRounds = 10
 
 module.exports = {
   authService: {
-    login: async userId => {
-      try {
-        const token = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
-          expiresIn: '259200000', // 3 Days
-          algorithm: 'HS256'
-        })
-        return token
-      } catch (error) {
-        throw error
-      }
+    createTokens: async userId => {
+      const refreshToken = jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET, {
+        algorithm: process.env.ALGORITHM,
+        expiresIn: +process.env.REFRESH_TOKEN_LIFE
+      })
+      const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
+        algorithm: process.env.ALGORITHM,
+        expiresIn: +process.env.ACCESS_TOKEN_LIFE,
+      })
+      return { refreshToken, accessToken }
     },
 
     validatePassword: async (password, hashedPassword) => {
@@ -29,8 +29,7 @@ module.exports = {
           throw new Error('email, fullname and password are required!')
         }
         const hash = await bcrypt.hash(password, saltRounds)
-        const user = await userService.add({ ...body, password: hash })
-        return user
+        return hash
       } catch (error) {
         throw error
       }

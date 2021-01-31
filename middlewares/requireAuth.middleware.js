@@ -3,22 +3,36 @@ const jwt = require('jsonwebtoken')
 require('dotenv').config()
 
 module.exports = {
-  
-  requireAuth: (req, res, next) => {
-    if (!req.cookies.token) return res.send({ message: `Couldn't login: No JWT present` })
-    jwt.verify(
-      req.cookies.token,
-      process.env.ACCESS_TOKEN_SECRET,
-      { algorithms: ['HS256'] },
-      (err, decodedToken) => {
-        if (err) return res.status(403).send({ message: `Couldn't login: JWT invalid` })
-        req.decodedToken = decodedToken
-        next()
-      }
-    )
+  verifyAccessToken: (req, res, next) => {
+    const accessToken = req.headers.authorization?.split(' ')[1]
+    if (!accessToken) return res.send({ message: `No JWT present` })
+    try {
+      req.decodedToken = _verifyToken(accessToken, process.env.ACCESS_TOKEN_SECRET)
+      next()
+    } catch ({ message }) {
+      res.status(403).send({ message })
+    }
   },
-
+  
+  verifyRefreshToken: (req, res, next) => {
+    const refreshToken = req.cookies.REFRESH_TOKEN
+    if (!refreshToken) return res.status(403).send({ message: 'No Refresh Token' })
+    try {
+      req.decodedToken = _verifyToken(refreshToken, process.env.REFRESH_TOKEN_SECRET)
+      next()
+    } catch ({ message }) {
+      res.status(403).send({ message })
+    }
+  },
+  
   requireAdmin: (req, res, next) => {
     req.decodedToken.isAdmin ? next() : res.status(403).end('Unauthorized Enough..')
   }
+}
+
+const _verifyToken = (token, secret) => {
+  return jwt.verify(token, secret, { algorithms: [process.env.ALGORITHM] }, (err, decodedToken) => {
+    if (err) throw new Error('JWT invalid')
+    else return decodedToken
+  })
 }

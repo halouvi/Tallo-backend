@@ -7,9 +7,7 @@ module.exports = {
       try {
         const criteria = _buildCriteria(query)
         const collection = await dbService.getCollection('user')
-        const users = await collection.find(criteria).toArray()
-        users.forEach(user => delete user.password)
-        return users
+        return await collection.find(criteria, { projection: { password: 0, boards: 0 } }).toArray()
       } catch (err) {
         console.error('cannot find users')
         throw err
@@ -34,11 +32,10 @@ module.exports = {
     getById: async userId => {
       try {
         const collection = await dbService.getCollection('user')
-        const user = await collection.findOne(
+        return await collection.findOne(
           { _id: ObjectId(userId) },
           { projection: { password: false } }
         )
-        return user
       } catch (err) {
         console.log(`ERROR: while finding user ${userId}`)
         throw err
@@ -48,8 +45,7 @@ module.exports = {
     getByEmail: async email => {
       try {
         const collection = await dbService.getCollection('user')
-        const user = await collection.findOne({ email })
-        return user
+        return await collection.findOne({ email })
       } catch (err) {
         console.error(`ERROR: while finding user ${email}`)
         throw err

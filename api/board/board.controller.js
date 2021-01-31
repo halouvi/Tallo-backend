@@ -12,8 +12,8 @@ module.exports = {
 
   getBoard: async (req, res) => {
     const board = await boardService.getById(req.params._id)
-    const users = await userService.getUsersById(board.users)
-    res.send({ board, users })
+    board.users = await userService.getUsersById(board.users)
+    res.send(board)
   },
 
   deleteBoard: async (req, res) => {

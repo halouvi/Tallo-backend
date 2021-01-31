@@ -1,72 +1,88 @@
-const { authService } = require('./auth.service')
 const logger = require('../../services/logger.service')
+const { authService } = require('./auth.service')
 const { boardService } = require('../board/board.service')
 const { userService } = require('../user/user.service')
 
-const NAME = 'token'
-const MAX_AGE = 259200000 // 3 days
-
 module.exports = {
-  login: async ({ decodedToken, body }, res) => {
+  loginByCreds: async ({ body }, res) => {
     try {
-      var user
-      if (decodedToken) {
-        user = await userService.getById(decodedToken.userId)
-      } else {
-        user = await userService.getByEmail(body.email)
-        const match = await authService.validatePassword(body.password, user.password)
-        delete user.password
-        if (!match) throw new Error(`Couldn't login: Invalid email or password`)
-      }
-      const token = await authService.login(user._id)
-      const boards = await boardService.getBoardsById(user.boards)
-      const board = boards[0]
-      user.boards = boards.map(({ _id, title }) => ({ _id, title }))
-      res
-        .cookie(NAME, token, {
-          maxAge: MAX_AGE,
-          httpOnly: true
-        })
-        .send({ user, board })
-      logger.debug(`${user.email} Logged in}`)
+      const user = await userService.getByEmail(body.email)
+      const match = await authService.validatePassword(body.password, user.password)
+      delete user.password
+      !match
+        ? res.status(403).send({ message: `Couldn't login: Invalid email or password` })
+        : _login(user, res)
+    } catch (error) {}
+  },
+
+  loginByToken: async ({ decodedToken }, res) => {
+    try {
+      const user = await userService.getById(decodedToken.userId)
+      _login(user, res)
+    } catch (error) {}
+  },
+
+  signup: async ({ body }, res) => {
+    try {
+      const hash = await authService.signup(body)
+      const user = await userService.add({ ...body, password: hash })
+      _login(user, res)
     } catch ({ message }) {
       console.error(message)
-      logger.error('[LOGIN] ' + message)
-      res.status(401).send({ message })
+      res.status(500).send({ message })
     }
   },
 
-  signup: async (req, res) => {
-    try {
-      const user = await authService.signup(req.body)
-      const token = await authService.login(user._id)
-      res
-        .cookie(NAME, token, {
-          maxAge: MAX_AGE,
-          httpOnly: true
-        })
-        .send({ user })
-      logger.debug(`new account created: ${JSON.stringify(req.body.email)}`)
-    } catch ({ message }) {
-      console.error(message)
-      logger.error('[SIGNUP] ' + message)
-      res.status(500).send({ message })
-    }
+  refreshTokens: async (req, res) => {
+    const { refreshToken, accessToken } = await authService.createTokens(req.decodedToken.userId)
+    res.cookie(..._createCookie(refreshToken))
+    res.send({ accessToken })
   },
 
   logout: async (req, res) => {
     try {
       // await authService.logout(req.decodedToken)
-      res
-        .cookie(NAME, null, {
-          maxAge: 0,
-          httpOnly: true
-        })
-        .send({ message: 'logged out successfully' })
-    } catch ({ message }) {
-      console.error({ message })
+      res.cookie(..._deleteCookie())
+      res.send({ accessToken: null })
+    } catch (err) {
+      console.error(err)
       logger.error('[LOGOUT] ' + message)
       res.status(500).send({ message: 'could not logout, please try later' })
     }
   }
 }
+
+const _login = async (user, res) => {
+  try {
+    const { refreshToken, accessToken } = await authService.createTokens(user._id)
+    const boards = await boardService.getBoardsById(user.boards)
+    const board = boards[0]
+    user.boards = boards.map(({ _id, title }) => ({ _id, title }))
+    logger.debug(`${user.email} Logged in}`)
+    res.cookie(..._createCookie(refreshToken)).send({ user, board, accessToken })
+  } catch (err) {
+    console.error(err)
+    logger.error('[LOGIN] ' + message)
+    res.status(401).send(err)
+  }
+}
+
+const _createCookie = refreshToken => [
+  process.env.REFRESH_TOKEN,
+  refreshToken,
+  {
+    maxAge: +process.env.REFRESH_TOKEN_LIFE,
+    path: process.env.REFRESH_PATH,
+    httpOnly: true,
+  }
+]
+
+const _deleteCookie = () => [
+  process.env.REFRESH_TOKEN,
+  null,
+  {
+    maxAge: 0,
+    path: process.env.REFRESH_PATH,
+    httpOnly: true,
+  }
+]

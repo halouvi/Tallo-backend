@@ -4,7 +4,6 @@ const queryType = require('query-types')
 const cors = require('cors')
 const path = require('path')
 const cookieParser = require('cookie-parser')
-// const session = require('express-session')
 
 const app = express()
 const http = require('http').createServer(app)
@@ -14,20 +13,12 @@ const io = require('socket.io')(http)
 app.use(cookieParser())
 app.use(bodyParser.json())
 app.use(queryType.middleware())
-// app.use(
-//   session({
-//     secret: 'CaSep2020 Secret Token 3287323',
-//     resave: false,
-//     saveUninitialized: true,
-//     cookie: { secure: false }
-//   })
-// )
 
 process.env.NODE_ENV === 'production'
   ? app.use(express.static(path.resolve(__dirname, 'public')))
   : app.use(
       cors({
-        origin: ['http://127.0.0.1:8080', 'http://localhost:8080', 'http://192.168.1.202:8080'],
+        origin: ['http://127.0.0.1:8080', 'http://localhost:8080', 'http://192.168.1.2:8080'],
         credentials: true
       })
     )

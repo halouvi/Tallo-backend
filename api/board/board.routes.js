@@ -1,16 +1,16 @@
 const express = require('express')
 const { getBoard, addBoard, getBoards, deleteBoard, updateBoard } = require('./board.controller')
-const { requireAuth } = require('../../middlewares/requireAuth.middleware')
+const { verifyAccessToken } = require('../../middlewares/requireAuth.middleware')
 
 const router = express.Router()
 
 // middleware that is specific to this router
 // router.use(requireAuth)
 
-router.get('/', requireAuth, getBoards)
-router.get('/:_id', requireAuth, getBoard)
-router.post('/', requireAuth, addBoard)
-router.put('/:_id', requireAuth, updateBoard)
-router.delete('/:_id', requireAuth, deleteBoard)
+router.get('/', verifyAccessToken, getBoards)
+router.get('/:_id', verifyAccessToken, getBoard)
+router.post('/', verifyAccessToken, addBoard)
+router.put('/:_id', verifyAccessToken, updateBoard)
+router.delete('/:_id', verifyAccessToken, deleteBoard)
 
 module.exports = router
