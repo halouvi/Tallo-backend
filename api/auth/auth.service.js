@@ -1,5 +1,4 @@
 require('dotenv').config()
-const { userService } = require('../user/user.service')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
@@ -23,12 +22,12 @@ module.exports = {
       return await bcrypt.compare(password, hashedPassword)
     },
 
-    signup: async body => {
+    hashPassword: async body => {
       try {
         if (!body.email || !body.password || !body.fullname) {
           throw new Error('email, fullname and password are required!')
         }
-        const hash = await bcrypt.hash(password, saltRounds)
+        const hash = await bcrypt.hash(body.password, saltRounds)
         return hash
       } catch (error) {
         throw error

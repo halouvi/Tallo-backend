@@ -24,19 +24,18 @@ module.exports = {
 
   signup: async ({ body }, res) => {
     try {
-      const hash = await authService.signup(body)
+      const hash = await authService.hashPassword(body)
       const user = await userService.add({ ...body, password: hash })
       _login(user, res)
-    } catch ({ message }) {
-      console.error(message)
-      res.status(500).send({ message })
+    } catch (err) {
+      console.error(err)
+      res.status(500).send(err)
     }
   },
 
   refreshTokens: async (req, res) => {
     const { refreshToken, accessToken } = await authService.createTokens(req.decodedToken.userId)
-    res.cookie(..._createCookie(refreshToken))
-    res.send({ accessToken })
+    res.cookie(..._createCookie(refreshToken)).send({ accessToken })
   },
 
   logout: async (req, res) => {
@@ -46,8 +45,8 @@ module.exports = {
       res.send({ accessToken: null })
     } catch (err) {
       console.error(err)
-      logger.error('[LOGOUT] ' + message)
-      res.status(500).send({ message: 'could not logout, please try later' })
+      logger.error('[LOGOUT] ' + err)
+      res.status(500).send(err)
     }
   }
 }
@@ -63,7 +62,7 @@ const _login = async (user, res) => {
     res.cookie(..._createCookie(refreshToken)).send({ user, board, accessToken })
   } catch (err) {
     console.error(err)
-    logger.error('[LOGIN] ' + message)
+    logger.error('[LOGIN] ' + err)
     res.status(401).send(err)
   }
 }
