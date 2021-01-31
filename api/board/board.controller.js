@@ -1,7 +1,6 @@
 const { boardService } = require('./board.service')
 const { userService } = require('../user/user.service')
 const logger = require('../../services/logger.service')
-const { ObjectId } = require('mongodb')
 
 module.exports = {
   getBoards: async (req, res) => {
