@@ -19,7 +19,7 @@ module.exports = {
         const collection = await dbService.getCollection('user')
         return await collection
           .find(
-            { _id: { $in: users.map(user => ObjectId(user._id)) } },
+            { _id: { $in: users.map(userId => ObjectId(userId)) } },
             { projection: { password: 0, boards: 0 } }
           )
           .toArray()

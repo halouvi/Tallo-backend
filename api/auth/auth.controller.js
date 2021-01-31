@@ -58,6 +58,8 @@ const _login = async (user, res) => {
     const boards = await boardService.getBoardsById(user.boards)
     const board = boards[0]
     user.boards = boards.map(({ _id, title }) => ({ _id, title }))
+    board.users = await userService.getUsersById(board.users)
+    console.log(board.users)
     logger.debug(`${user.email} Logged in}`)
     res.cookie(..._createCookie(refreshToken)).send({ user, board, accessToken })
   } catch (err) {
@@ -73,7 +75,7 @@ const _createCookie = refreshToken => [
   {
     maxAge: +process.env.REFRESH_TOKEN_LIFE,
     path: process.env.REFRESH_PATH,
-    httpOnly: true,
+    httpOnly: true
   }
 ]
 
@@ -83,6 +85,6 @@ const _deleteCookie = () => [
   {
     maxAge: 0,
     path: process.env.REFRESH_PATH,
-    httpOnly: true,
+    httpOnly: true
   }
 ]
