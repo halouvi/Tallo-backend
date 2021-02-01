@@ -6,14 +6,14 @@ const saltRounds = 10
 
 module.exports = {
   authService: {
-    createTokens: async userId => {
+    createTokens: userId => {
       const refreshToken = jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET, {
         algorithm: process.env.ALGORITHM,
         expiresIn: +process.env.REFRESH_TOKEN_LIFE
       })
       const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
         algorithm: process.env.ALGORITHM,
-        expiresIn: +process.env.ACCESS_TOKEN_LIFE,
+        expiresIn: +process.env.ACCESS_TOKEN_LIFE
       })
       return { refreshToken, accessToken }
     },

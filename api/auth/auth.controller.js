@@ -33,14 +33,13 @@ module.exports = {
     }
   },
 
-  refreshTokens: async (req, res) => {
-    const { refreshToken, accessToken } = await authService.createTokens(req.decodedToken.userId)
+  refreshTokens: async ({decodedToken}, res) => {
+    const { refreshToken, accessToken } = await authService.createTokens(decodedToken.userId)
     res.cookie(..._createCookie(refreshToken)).send({ accessToken })
   },
 
   logout: async (req, res) => {
     try {
-      // await authService.logout(req.decodedToken)
       res.cookie(..._deleteCookie())
       res.send({ accessToken: null })
     } catch (err) {
