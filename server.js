@@ -4,6 +4,8 @@ const queryType = require('query-types')
 const cors = require('cors')
 const path = require('path')
 const cookieParser = require('cookie-parser')
+const session = require('express-session')
+
 
 const app = express()
 const http = require('http').createServer(app)
@@ -14,6 +16,12 @@ app.use(cookieParser())
 app.use(bodyParser.json({ limit: '50mb' }))
 app.use(bodyParser.urlencoded({ limit: '50mb', parameterLimit: 100000, extended: true }))
 app.use(queryType.middleware())
+app.use(session({
+  secret: 'CaSep2020 Secret Token 3287323',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false }
+}))
  
 process.env.NODE_ENV === 'production'
   ? app.use(express.static(path.resolve(__dirname, 'public')))
