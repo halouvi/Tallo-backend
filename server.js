@@ -11,9 +11,9 @@ const io = require('socket.io')(http)
 
 // Express App Config
 app.use(cookieParser())
-app.use(bodyParser.json())
+app.use(bodyParser.json({ limit: '100mb' }))
+app.use(bodyParser.urlencoded({ limit: '100mb', extended: true, parameterLimit: 50000 }))
 app.use(queryType.middleware())
-
 app.use(
   process.env.NODE_ENV === 'production'
     ? express.static(path.resolve(__dirname, 'public'))

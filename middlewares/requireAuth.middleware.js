@@ -4,7 +4,7 @@ require('dotenv').config()
 
 module.exports = {
   verifyAccessToken: (req, res, next) => {
-    const accessToken = req.headers.authorization?.split(' ')[1]
+    const accessToken = req.headers.authorization.split(' ')[1]
     if (!accessToken) return res.send({ message: `No JWT present` })
     try {
       req.decodedToken = _verifyToken(accessToken, process.env.ACCESS_TOKEN_SECRET)

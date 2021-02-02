@@ -33,7 +33,7 @@ module.exports = {
     }
   },
 
-  refreshTokens: async ({decodedToken}, res) => {
+  refreshTokens: async ({ decodedToken }, res) => {
     const { refreshToken, accessToken } = await authService.createTokens(decodedToken.userId)
     res.cookie(..._createCookie(refreshToken)).send({ accessToken })
   },
@@ -54,8 +54,8 @@ const _login = async (user, res) => {
   try {
     const { refreshToken, accessToken } = await authService.createTokens(user._id)
     const boards = await boardService.getBoardsById(user.boards)
-    user.boards = boards.map(({ _id, title }) => ({ _id, title }))
     const board = boards[0]
+    user.boards = boards.map(({ _id, title }) => ({ _id, title }))
     board.users = await userService.getUsersById(board.users)
     logger.debug(`${user.email} Logged in}`)
     res.cookie(..._createCookie(refreshToken)).send({ user, board, accessToken })
