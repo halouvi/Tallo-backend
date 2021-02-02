@@ -28,7 +28,9 @@ module.exports = {
     getById: async boardId => {
       try {
         const collection = await dbService.getCollection('board')
-        return await collection.findOne({ _id: ObjectId(boardId) })
+        const board = await collection.findOne({ _id: ObjectId(boardId) })
+        board._id = ObjectId(board._id).toHexString()
+        return board
       } catch (error) {
         console.log(`ERROR: cannot get board ${boardId}`)
         throw new Error(error)
@@ -36,11 +38,15 @@ module.exports = {
     },
     update: async board => {
       board._id = ObjectId(board._id)
-      board.users = board.users.map(({ _id }) => _id)
       try {
         const collection = await dbService.getCollection('board')
-        await collection.findOneAndUpdate({ _id: board._id }, { $set: board })
-        return board
+        const { value: prevBoard } = await collection.findOneAndUpdate(
+          { _id: board._id },
+          { $set: board }
+        )
+        prevBoard._id = ObjectId(prevBoard._id).toHexString()
+        board._id = ObjectId(board._id).toHexString()
+        return prevBoard
       } catch (error) {
         console.log(`ERROR: cannot update board ${board._id}`)
         throw new Error(error)
@@ -78,6 +84,8 @@ module.exports = {
             }
           )
           .toArray()
+        boards.forEach(board => (board._id = ObjectId(board._id).toHexString()))
+        boards.sort(({ _id }) => (_id === boardIds[0] ? -1 : 1))
         return boards
       } catch (err) {
         console.log(`ERROR: while finding boards: ${error}`)

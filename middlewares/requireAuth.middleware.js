@@ -9,22 +9,22 @@ module.exports = {
     try {
       req.decodedToken = _verifyToken(accessToken, process.env.ACCESS_TOKEN_SECRET)
       next()
-    } catch ({ message }) {
-      res.status(403).send({ message })
+    } catch (err) {
+      res.status(403).send(err)
     }
   },
-  
+
   verifyRefreshToken: (req, res, next) => {
     const refreshToken = req.cookies.REFRESH_TOKEN
     if (!refreshToken) return res.status(403).send({ message: 'No Refresh Token' })
     try {
       req.decodedToken = _verifyToken(refreshToken, process.env.REFRESH_TOKEN_SECRET)
       next()
-    } catch ({ message }) {
-      res.status(403).send({ message })
+    } catch (err) {
+      res.status(403).send(err)
     }
   },
-  
+
   requireAdmin: (req, res, next) => {
     req.decodedToken.isAdmin ? next() : res.status(403).end('Unauthorized Enough..')
   }

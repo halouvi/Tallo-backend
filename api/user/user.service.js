@@ -13,7 +13,7 @@ module.exports = {
           )
           .toArray()
       } catch (err) {
-        console.log(`ERROR: while finding users: ${error}`)
+        console.log(`ERROR: while finding users: ${err}`)
         throw err
       }
     },
@@ -62,6 +62,29 @@ module.exports = {
         return user
       } catch (err) {
         console.log(`ERROR: cannot update user ${user._id}`)
+        throw err
+      }
+    },
+
+    updateBoardUsers: async (boardId, prevUsers, newUsers) => {
+      const removeBoardFrom = prevUsers.filter(user => !newUsers.includes(user))
+      const addBoardTo = newUsers.filter(user => !prevUsers.includes(user))
+      try {
+        const collection = await dbService.getCollection('user')
+        if (removeBoardFrom.length) {
+          await collection.updateMany(
+            { _id: { $in: removeBoardFrom.map(userId => ObjectId(userId)) } },
+            { $pull: { boards: boardId } }
+          )
+        }
+        if (addBoardTo.length) {
+          await collection.updateMany(
+            { _id: { $in: addBoardTo.map(userId => ObjectId(userId)) } },
+            { $push: { boards: { $each: [boardId], $position: 0 } } }
+          )
+        }
+        return
+      } catch (err) {
         throw err
       }
     },
