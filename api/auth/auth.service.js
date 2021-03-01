@@ -19,19 +19,11 @@ module.exports = {
     },
 
     validatePassword: async (password, hashedPassword) => {
-      return await bcrypt.compare(password, hashedPassword)
+      return (await bcrypt.compare(password, hashedPassword))
+        ? Promise.resolve()
+        : Promise.reject('Incorrect Password!')
     },
 
-    hashPassword: async body => {
-      try {
-        if (!body.email || !body.password || !body.fullname) {
-          throw new Error('email, fullname and password are required!')
-        }
-        const hash = await bcrypt.hash(body.password, saltRounds)
-        return hash
-      } catch (error) {
-        throw error
-      }
-    }
+    hashPassword: password => bcrypt.hash(password, saltRounds)
   }
 }

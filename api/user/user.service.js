@@ -4,113 +4,74 @@ const { ObjectId } = require('mongodb')
 module.exports = {
   userService: {
     getUsersById: async users => {
-      try {
-        const collection = await dbService.getCollection('user')
-        return await collection
-          .find(
-            { _id: { $in: users.map(userId => ObjectId(userId)) } },
-            { projection: { password: 0, boards: 0 } }
-          )
-          .toArray()
-      } catch (err) {
-        console.log(`ERROR: while finding users: ${err}`)
-        throw err
-      }
+      const collection = await dbService.getCollection('user')
+      return await collection
+        .find(
+          { _id: { $in: users.map(userId => ObjectId(userId)) } },
+          { projection: { password: 0, boards: 0 } }
+        )
+        .toArray()
     },
 
     getById: async userId => {
-      try {
-        const collection = await dbService.getCollection('user')
-        return await collection.findOne(
-          { _id: ObjectId(userId) },
-          { projection: { password: false } }
-        )
-      } catch (err) {
-        console.log(`ERROR: while finding user ${userId}`)
-        throw err
-      }
+      const collection = await dbService.getCollection('user')
+      return await collection.findOne(
+        { _id: ObjectId(userId) },
+        { projection: { password: false } }
+      )
     },
 
     getByEmail: async email => {
-      try {
-        const collection = await dbService.getCollection('user')
-        return await collection.findOne({ email })
-      } catch (err) {
-        console.error(`ERROR: while finding user ${email}`)
-        throw err
-      }
+      const collection = await dbService.getCollection('user')
+      const user = await collection.findOne({ email })
+      return user
     },
 
     remove: async userId => {
-      try {
-        const collection = await dbService.getCollection('user')
-        await collection.deleteOne({ _id: ObjectId(userId) })
-      } catch (err) {
-        console.log(`ERROR: cannot remove user ${userId}`)
-        throw new Error(err)
-      }
+      const collection = await dbService.getCollection('user')
+      await collection.deleteOne({ _id: ObjectId(userId) })
     },
 
-    update: async ({ userId, field, type, value }) => {
-      try {
-        const collection = await dbService.getCollection('user')
-        const { value: user } = await collection.findOneAndUpdate(
-          { _id: ObjectId(userId) },
-          { [type]: { [field]: value } },
-          { new: true, projection: { password: false } }
+    update: async user => {
+      const collection = await dbService.getCollection('user')
+      const { value: returnedUser } = await collection.findOneAndUpdate(
+        { _id: ObjectId(user._id) },
+        { $set: user }
+      )
+      return returnedUser
+    },
+
+    updateBoardUsers: async (boardId, nextUsers = [], prevUsers = []) => {
+      const removeBoardFrom = prevUsers.filter(user => !nextUsers.includes(user))
+      const addBoardTo = nextUsers.filter(user => !prevUsers.includes(user))
+      const collection = await dbService.getCollection('user')
+      if (removeBoardFrom.length) {
+        await collection.updateMany(
+          { _id: { $in: removeBoardFrom.map(userId => ObjectId(userId)) } },
+          { $pull: { boards: boardId } }
         )
-        return user
-      } catch (err) {
-        console.log(`ERROR: cannot update user ${user._id}`)
-        throw err
       }
-    },
-
-    updateBoardUsers: async (boardId, prevUsers, newUsers) => {
-      const removeBoardFrom = prevUsers.filter(user => !newUsers.includes(user))
-      const addBoardTo = newUsers.filter(user => !prevUsers.includes(user))
-      try {
-        const collection = await dbService.getCollection('user')
-        if (removeBoardFrom.length) {
-          await collection.updateMany(
-            { _id: { $in: removeBoardFrom.map(userId => ObjectId(userId)) } },
-            { $pull: { boards: boardId } }
-          )
-        }
-        if (addBoardTo.length) {
-          await collection.updateMany(
-            { _id: { $in: addBoardTo.map(userId => ObjectId(userId)) } },
-            { $push: { boards: { $each: [boardId], $position: 0 } } }
-          )
-        }
-        return
-      } catch (err) {
-        throw err
+      if (addBoardTo.length) {
+        await collection.updateMany(
+          { _id: { $in: addBoardTo.map(userId => ObjectId(userId)) } },
+          { $push: { boards: { $each: [boardId], $position: 0 } } }
+        )
       }
+      return { removeBoardFrom, addBoardTo }
     },
 
     add: async user => {
-      try {
-        const collection = await dbService.getCollection('user')
-        const { insertedId } = await collection.insertOne(user)
-        delete user.password
-        user._id = insertedId
-        return user
-      } catch (err) {
-        console.log(`ERROR: cannot insert user`)
-        throw new Error(err)
-      }
+      const collection = await dbService.getCollection('user')
+      const { insertedId } = await collection.insertOne(user)
+      delete user.password
+      user._id = insertedId
+      return user
     },
 
     query: async params => {
-      try {
-        const criteria = _buildCriteria(params)
-        const collection = await dbService.getCollection('user')
-        return await collection.find(criteria, { projection: { password: 0, boards: 0 } }).toArray()
-      } catch (err) {
-        console.error('cannot find users')
-        // throw err
-      }
+      const criteria = _buildCriteria(params)
+      const collection = await dbService.getCollection('user')
+      return await collection.find(criteria, { projection: { password: 0, boards: 0 } }).toArray()
     }
   }
 }
@@ -125,22 +86,3 @@ const _buildCriteria = params => {
   }
   return criteria
 }
-
-// const _buildCriteria = body => {
-//   const { query, boardUsers } = body
-//   console.log(query)
-//   const criteria = { $and: [], $or: [] }
-//   if (query) {
-//     const regex = new RegExp(query.split(/,|-| /).join('|'), 'i')
-//     criteria.$or.push({ fullname: regex })
-//   }
-//   if (boardUsers.length) {
-//     const userIds = boardUsers.map(userId => ObjectId(userId))
-//     criteria.$and.push({
-//       _id: {
-//         $nin: userIds
-//       }
-//     })
-//   }
-//   return criteria
-// }

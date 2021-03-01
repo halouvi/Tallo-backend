@@ -14,7 +14,7 @@ module.exports = {
         socket.join(boardId)
         socket.boardId = boardId
       })
-      
+
       socket.on(LEAVE_BOARD, boardId => {
         socket.leave(socket.boardId)
         delete socket.boardId
@@ -24,7 +24,6 @@ module.exports = {
         const board = await boardService.getById(boardId)
         socket.broadcast.emit(BOARD_UPDATED, board)
       })
-
 
       socket.on(disconnect, () => {})
     })
