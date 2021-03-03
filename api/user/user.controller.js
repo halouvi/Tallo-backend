@@ -12,9 +12,9 @@ module.exports = {
     }
   },
 
-  query: async (req, res) => {
+  query: async ({ params }, res) => {
     try {
-      const users = await userService.query(req.params)
+      const users = await userService.query(params)
       res.send(users)
     } catch (err) {
       console.error(`userController - query ${err}`)

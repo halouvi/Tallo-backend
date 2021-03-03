@@ -69,12 +69,32 @@ module.exports = {
     },
 
     query: async params => {
-      const criteria = _buildCriteria(params)
+      const $regex = new RegExp(params.query, 'i')
       const collection = await dbService.getCollection('user')
-      return await collection.find(criteria, { projection: { password: 0, boards: 0 } }).toArray()
+      return await collection.find({ name: { $regex } }).toArray()
     }
   }
 }
+
+// const criteria = _buildCriteria(params)
+// async function createIndex() {
+//   // const criteria = _buildCriteria(params)
+//   try {
+//     const collection = await dbService.getCollection('user')
+//     const res = await collection.createIndex(
+//       { name: 1 },
+//       {
+//         collation: {
+//           locale: 'en',
+//           strength: 2
+//         }
+//       }
+//     )
+//     console.log(res)
+//   } catch (error) {}
+// }
+
+// createIndex()
 
 const _buildCriteria = params => {
   const { query } = params

@@ -6,7 +6,10 @@ const { ObjectId } = require('mongodb')
 module.exports = {
   addBoard: async (req, res) => {
     try {
-      const { body: board, decodedToken: { userId } } = req
+      const {
+        body: board,
+        decodedToken: { userId }
+      } = req
       const boardId = await boardService.add(board)
       await userService.updateBoardUsers(boardId, [userId])
       res.send({ boardId })
