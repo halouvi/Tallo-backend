@@ -20,9 +20,10 @@ app.use(
     ? express.static(path.resolve(__dirname, 'public'))
     : cors({
         origin: [
-          'http://127.0.0.1:8080',
           'http://localhost:8080',
-          'http://192.168.1.2:8080'
+          'http://127.0.0.1:8080',
+          'http://192.168.1.3:8080',
+          'http://192.168.1.5:8080'
         ],
         credentials: true
       })
