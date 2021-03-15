@@ -1,4 +1,5 @@
 const { boardService } = require('../board/board.service')
+const { userService } = require('../user/user.service')
 
 const connection = 'connection'
 const disconnect = 'disconnect'
@@ -14,17 +15,17 @@ module.exports = {
         socket.join(boardId)
         socket.boardId = boardId
       })
-      
+
       socket.on(LEAVE_BOARD, boardId => {
-        socket.leave(socket.boardId)
+        socket.leave(boardId)
         delete socket.boardId
       })
 
       socket.on(BOARD_UPDATED, async boardId => {
         const board = await boardService.getById(boardId)
-        socket.broadcast.emit(BOARD_UPDATED, board)
+        board.users = await userService.getUsersById(board.users)
+        socket.to(boardId).emit(BOARD_UPDATED, board)
       })
-
 
       socket.on(disconnect, () => {})
     })

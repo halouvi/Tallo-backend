@@ -8,7 +8,7 @@
         "dev": "set NODE_ENV=development & nodemon app.js",
         "server:prod": "node app.js"
     },
-    "author": "moshe pinhasi",
+    "author": "tal harouvi",
     "license": "ISC",
     "dependencies": {
         "axios": "^0.21.1",

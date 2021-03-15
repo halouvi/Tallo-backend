@@ -5,41 +5,61 @@ const { ObjectId } = require('mongodb')
 
 module.exports = {
   addBoard: async (req, res) => {
-    const board = req.body
-    const boardId = await boardService.add(board)
-    await userService.update({
-      userId: req.decodedToken.userId,
-      field: 'boards',
-      type: '$push',
-      value: boardId
-    })
-    res.send({ boardId })
+    try {
+      const {
+        body: board,
+        decodedToken: { userId }
+      } = req
+      const boardId = await boardService.add(board)
+      await userService.updateBoardUsers(boardId, [userId])
+      res.send({ boardId })
+    } catch (err) {
+      console.error(`boardController - addBoard ${err}`)
+      res.status(500).send(`${err}`)
+    }
   },
+
   getBoards: async (req, res) => {
-    const boards = await boardService.query(req.query)
-    res.send(boards)
+    try {
+      const boards = await boardService.query(req.query)
+      res.send(boards)
+    } catch (err) {
+      console.error(`boardController - getBoards ${err}`)
+      res.status(500).send(`${err}`)
+    }
   },
 
   getBoard: async (req, res) => {
-    const board = await boardService.getById(req.params._id)
-    board.users = await userService.getUsersById(board.users)
-    res.send(board)
+    try {
+      const board = await boardService.getById(req.params._id)
+      board.users = await userService.getUsersById(board.users)
+      res.send(board)
+    } catch (err) {
+      console.error(`boardController - getBoard ${err}`)
+      res.status(500).send(`${err}`)
+    }
   },
+
   updateBoard: async (req, res) => {
     const board = req.body
     board.users = board.users.map(({ _id }) => _id)
     try {
       const prevBoard = await boardService.update(board)
-      await userService.updateBoardUsers(board._id, prevBoard.users, board.users)
+      await userService.updateBoardUsers(board._id, board.users, prevBoard.users)
       res.end()
-    } catch (error) {
-      console.error(`Couldn't update board: ${error}`)
-      res.status(500).send(err)
+    } catch (err) {
+      console.error(`boardController - updateBoard ${err}`)
+      res.status(500).send(`${err}`)
     }
   },
 
   deleteBoard: async (req, res) => {
-    await boardService.remove(req.params.id)
-    res.end()
+    try {
+      await boardService.remove(req.params.id)
+      res.end()
+    } catch (err) {
+      console.error(`boardController - deleteBoard ${err}`)
+      res.status(500).send(`${err}`)
+    }
   }
 }

@@ -7,62 +7,65 @@ module.exports = {
   loginByCreds: async ({ body }, res) => {
     try {
       const user = await userService.getByEmail(body.email)
-      const match = await authService.validatePassword(body.password, user.password)
+      if (!user) throw new Error(`${email} is not registered to any user`)
+      await authService.validatePassword(body.password, user.password)
       delete user.password
-      !match
-        ? res.status(403).send({ message: `Couldn't login: Invalid email or password` })
-        : _login(user, res)
-    } catch (error) {}
+      _login(user, res)
+    } catch (err) {
+      console.error(`authController - loginByCreds ${err}`)
+      res.status(403).send(`${err}`)
+    }
   },
 
   loginByToken: async ({ decodedToken }, res) => {
     try {
       const user = await userService.getById(decodedToken.userId)
       _login(user, res)
-    } catch (error) {}
+    } catch (err) {
+      console.error(`authController - loginByToken ${err}`)
+      res.status(403).send(`${err}`)
+    }
   },
 
   signup: async ({ body }, res) => {
     try {
-      const hash = await authService.hashPassword(body)
+      const hash = await authService.hashPassword(body.password)
       const user = await userService.add({ ...body, password: hash })
-      _login(user, res)
+      const { refreshToken, accessToken } = authService.createTokens(user._id)
+      res.cookie(..._createCookie(refreshToken)).send({ user, accessToken })
     } catch (err) {
-      console.error(err)
-      res.status(500).send(err)
+      console.error(`authController - signup ${err}`)
+      res.status(500).send(`${err}`)
     }
-  },
-
-  refreshTokens: async ({ decodedToken }, res) => {
-    const { refreshToken, accessToken } = await authService.createTokens(decodedToken.userId)
-    res.cookie(..._createCookie(refreshToken)).send({ accessToken })
   },
 
   logout: async (req, res) => {
     try {
-      res.cookie(..._deleteCookie())
-      res.send({ accessToken: null })
+      res.cookie(..._deleteCookie()).send({ accessToken: null })
     } catch (err) {
-      console.error(err)
-      logger.error('[LOGOUT] ' + err)
-      res.status(500).send(err)
+      console.error(`authController - logout ${err}`)
+      res.status(500).send(`${err}`)
     }
+  },
+
+  refreshTokens: ({ decodedToken }, res) => {
+    const { refreshToken, accessToken } = authService.createTokens(decodedToken.userId)
+    res.cookie(..._createCookie(refreshToken)).send({ accessToken })
   }
 }
 
 const _login = async (user, res) => {
   try {
-    const { refreshToken, accessToken } = await authService.createTokens(user._id)
+    const { refreshToken, accessToken } = authService.createTokens(user._id)
     const boards = await boardService.getBoardsById(user.boards)
-    const board = boards[0]
     user.boards = boards.map(({ _id, title }) => ({ _id, title }))
+    const board = boards[0]
     board.users = await userService.getUsersById(board.users)
     logger.debug(`${user.email} Logged in}`)
     res.cookie(..._createCookie(refreshToken)).send({ user, board, accessToken })
   } catch (err) {
-    console.error(err)
-    logger.error('[LOGIN] ' + err)
-    res.status(401).send(err)
+    console.error(`authController - _login ${err}`)
+    res.status(401).send(`${err}`)
   }
 }
 

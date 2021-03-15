@@ -4,6 +4,7 @@ const queryType = require('query-types')
 const cors = require('cors')
 const path = require('path')
 const cookieParser = require('cookie-parser')
+require('dotenv').config()
 
 const app = express()
 const http = require('http').createServer(app)
@@ -18,7 +19,12 @@ app.use(
   process.env.NODE_ENV === 'production'
     ? express.static(path.resolve(__dirname, 'public'))
     : cors({
-        origin: ['http://127.0.0.1:8080', 'http://localhost:8080', 'http://192.168.1.202:8080'],
+        origin: [
+          'http://localhost:8080',
+          'http://127.0.0.1:8080',
+          'http://192.168.1.3:8080',
+          'http://192.168.1.5:8080'
+        ],
         credentials: true
       })
 )
