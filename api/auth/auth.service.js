@@ -27,3 +27,4 @@ module.exports = {
     hashPassword: password => bcrypt.hash(password, saltRounds)
   }
 }
+  
