@@ -23,8 +23,7 @@ module.exports = {
 
     getByEmail: async email => {
       const collection = await dbService.getCollection('user')
-      const user = await collection.findOne({ email })
-      return user
+      return await collection.findOne({ email })
     },
 
     remove: async userId => {
